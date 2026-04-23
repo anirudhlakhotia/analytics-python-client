@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from httpx import URL, Client, Response
 
-from couchbase_analytics.common.credential import Credential
+from couchbase_analytics.common.credential import Credential, CredentialType
 from couchbase_analytics.common.deserializer import Deserializer
 from couchbase_analytics.common.logging import LogLevel, log_message
 from couchbase_analytics.protocol._core.auth import DynamicCredentialAuth
@@ -189,6 +189,18 @@ class _ClientAdapter:
                 f'{current.credential_type.value}, new type is {new_credential.credential_type.value}.'
             )
         self._conn_details.credential = new_credential
+
+        # For JWT/password the Authorization header is read per-request, so swapping the
+        # credential alone suffices. For mTLS the cert is baked into the SSLContext which
+        # is baked into the httpx Client, so rebuild both. Outstanding streaming responses
+        # keep a reference to the old Client and continue to completion; new requests use
+        # the new Client.
+        if new_credential.credential_type is CredentialType.CERTIFICATE:
+            self._conn_details.validate_security_options()
+            self.close_client()
+            self.reset_client()
+            self.create_client()
+
         self.log_message('Cluster HTTP credential updated', LogLevel.INFO)
 
 

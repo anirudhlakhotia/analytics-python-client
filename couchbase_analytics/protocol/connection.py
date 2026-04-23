@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, urlparse
 from couchbase_analytics.common._core.certificates import _Certificates
 from couchbase_analytics.common._core.duration_str_utils import parse_duration_str
 from couchbase_analytics.common._core.utils import is_null_or_empty
-from couchbase_analytics.common.credential import Credential
+from couchbase_analytics.common.credential import Credential, CredentialType
 from couchbase_analytics.common.deserializer import DefaultJsonDeserializer, Deserializer
 from couchbase_analytics.common.options import ClusterOptions, SecurityOptions, TimeoutOptions
 from couchbase_analytics.common.request import RequestURL
@@ -209,6 +209,8 @@ class _ConnectionDetails:
                 )
 
         if not self.is_secure():
+            if self.credential.credential_type is CredentialType.CERTIFICATE:
+                raise ValueError('Client-certificate authentication requires a TLS (https://) endpoint.')
             return
 
         self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -241,6 +243,11 @@ class _ConnectionDetails:
         else:
             self.ssl_context.check_hostname = True
             self.ssl_context.verify_mode = ssl.CERT_REQUIRED
+
+        if self.credential.credential_type is CredentialType.CERTIFICATE:
+            self.ssl_context.load_cert_chain(
+                certfile=self.credential._cert_path, keyfile=self.credential._key_path
+            )
 
     @classmethod
     def create(

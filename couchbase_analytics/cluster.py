@@ -142,9 +142,9 @@ class Cluster:
     def set_credential(self, credential: Credential) -> None:
         """Replace the credential used for subsequent HTTP requests.
 
-        Allows updating credentials (in particular, rotating a JWT) without restarting
-        the application.  The new credential must be of the same type as the current
-        credential.
+        Allows updating credentials (in particular, rotating a JWT or client certificate)
+        without restarting the application.  The new credential must be of the same type
+        as the current credential.
 
         Args:
             credential: The new :class:`.Credential` to use.

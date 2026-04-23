@@ -34,5 +34,9 @@ class DynamicCredentialAuth(Auth):
         self._conn_details = conn_details
 
     def auth_flow(self, request: Request):  # type: ignore[no-untyped-def]
-        request.headers['Authorization'] = self._conn_details.credential.http_authorization_header()
+        header = self._conn_details.credential.http_authorization_header()
+        if header is not None:
+            request.headers['Authorization'] = header
+        # Client-certificate credentials authenticate during the TLS handshake, so no
+        # Authorization header is set.
         yield request
