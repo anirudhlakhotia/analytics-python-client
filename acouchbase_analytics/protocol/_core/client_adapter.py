@@ -20,11 +20,12 @@ import logging
 from typing import TYPE_CHECKING, Optional, cast
 from uuid import uuid4
 
-from httpx import URL, AsyncClient, BasicAuth, Response
+from httpx import URL, AsyncClient, Response
 
 from couchbase_analytics.common.credential import Credential
 from couchbase_analytics.common.deserializer import Deserializer
 from couchbase_analytics.common.logging import LogLevel, log_message
+from couchbase_analytics.protocol._core.auth import DynamicCredentialAuth
 from couchbase_analytics.protocol.connection import _ConnectionDetails
 from couchbase_analytics.protocol.options import OptionsBuilder
 
@@ -138,6 +139,7 @@ class _AsyncClientAdapter:
         **INTERNAL**
         """
         if not hasattr(self, '_client'):
+            auth = DynamicCredentialAuth(self._conn_details)
             if self._conn_details.is_secure():
                 if self._conn_details.ssl_context is None:
                     raise ValueError('SSL context is required for secure connections.')
@@ -146,14 +148,14 @@ class _AsyncClientAdapter:
                     transport = self._http_transport_cls(verify=self._conn_details.ssl_context)
                 self._client = AsyncClient(
                     verify=self._conn_details.ssl_context,
-                    auth=BasicAuth(*self._conn_details.credential),
+                    auth=auth,
                     transport=transport,
                 )
             else:
                 transport = None
                 if self._http_transport_cls is not None:
                     transport = self._http_transport_cls()
-                self._client = AsyncClient(auth=BasicAuth(*self._conn_details.credential), transport=transport)
+                self._client = AsyncClient(auth=auth, transport=transport)
             self.log_message(
                 (f'Cluster HTTP client created: connection_details={self._conn_details.get_init_details()}'),
                 LogLevel.INFO,
@@ -186,6 +188,16 @@ class _AsyncClientAdapter:
         """
         if hasattr(self, '_client'):
             del self._client
+
+    async def update_credential(self, new_credential: Credential) -> None:
+        current = self._conn_details.credential
+        if current.credential_type is not new_credential.credential_type:
+            raise ValueError(
+                f'Cannot switch credential type at runtime; current type is '
+                f'{current.credential_type.value}, new type is {new_credential.credential_type.value}.'
+            )
+        self._conn_details.credential = new_credential
+        self.log_message('Cluster HTTP credential updated', LogLevel.INFO)
 
 
 logger = logging.getLogger(_AsyncClientAdapter.LOGGER_NAME)

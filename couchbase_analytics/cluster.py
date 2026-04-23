@@ -139,6 +139,22 @@ class Cluster:
         """  # noqa: E501
         return self._impl.execute_query(statement, *args, **kwargs)
 
+    def set_credential(self, credential: Credential) -> None:
+        """Replace the credential used for subsequent HTTP requests.
+
+        Allows updating credentials (in particular, rotating a JWT) without restarting
+        the application.  The new credential must be of the same type as the current
+        credential.
+
+        Args:
+            credential: The new :class:`.Credential` to use.
+
+        Raises:
+            ValueError: If the new credential is a different type than the current
+                credential.
+        """
+        return self._impl.set_credential(credential)
+
     def shutdown(self) -> None:
         """Shuts down this cluster instance. Cleaning up all resources associated with it.
 

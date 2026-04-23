@@ -159,7 +159,7 @@ class _ConnectionDetails:
 
     url: RequestURL
     cluster_options: ClusterOptionsTransformedKwargs
-    credential: Tuple[bytes, bytes]
+    credential: Credential
     default_deserializer: Deserializer
     ssl_context: Optional[ssl.SSLContext] = None
     sni_hostname: Optional[str] = None
@@ -266,6 +266,6 @@ class _ConnectionDetails:
         if default_deserializer is None:
             default_deserializer = DefaultJsonDeserializer()
 
-        conn_dtls = cls(url, cluster_opts, credential.astuple(), default_deserializer, logger_name=logger_name)
+        conn_dtls = cls(url, cluster_opts, credential, default_deserializer, logger_name=logger_name)
         conn_dtls.validate_security_options()
         return conn_dtls

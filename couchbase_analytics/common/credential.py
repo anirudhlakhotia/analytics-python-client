@@ -16,7 +16,14 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Tuple
+from base64 import b64encode
+from enum import Enum
+from typing import Callable, Dict
+
+
+class CredentialType(Enum):
+    PASSWORD = 'password'
+    JWT = 'jwt'
 
 
 class Credential:
@@ -30,8 +37,20 @@ class Credential:
     """
 
     def __init__(self, **kwargs: str) -> None:
+        token = kwargs.pop('jwt_token', None)
         username = kwargs.pop('username', None)
         password = kwargs.pop('password', None)
+
+        if token is not None:
+            if not isinstance(token, str):
+                raise ValueError('The JWT token must be a str.')
+            if username is not None or password is not None:
+                raise ValueError('Cannot provide both a JWT token and username/password.')
+            self._type = CredentialType.JWT
+            self._token = token.strip()
+            # Pre-compute the Authorization header so per-request dispatch is a cheap attribute read.
+            self._auth_header = f'Bearer {self._token}'
+            return
 
         if username is None:
             raise ValueError('Must provide a username.')
@@ -43,20 +62,26 @@ class Credential:
         if not isinstance(password, str):
             raise ValueError('The password must be a str.')
 
+        self._type = CredentialType.PASSWORD
         self._username = username
         self._password = password
+        # Pre-compute the Authorization header so per-request dispatch is a cheap attribute read.
+        self._auth_header = 'Basic ' + b64encode(f'{username}:{password}'.encode('utf-8')).decode('ascii')
+
+    @property
+    def credential_type(self) -> CredentialType:
+        return self._type
 
     def asdict(self) -> Dict[str, str]:
         """
         **INTERNAL**
         """
+        if self._type is CredentialType.JWT:
+            return {'jwt_token': self._token}
         return {'username': self._username, 'password': self._password}
 
-    def astuple(self) -> Tuple[bytes, bytes]:
-        """
-        **INTERNAL**
-        """
-        return self._username.encode(), self._password.encode()
+    def http_authorization_header(self) -> str:
+        return self._auth_header
 
     @classmethod
     def from_username_and_password(cls, username: str, password: str) -> Credential:
@@ -72,10 +97,27 @@ class Credential:
         return Credential(username=username, password=password)
 
     @classmethod
+    def from_jwt(cls, token: str) -> Credential:
+        """Create a :class:`.Credential` from a JSON Web Token (JWT).
+
+        The SDK sends an ``Authorization: Bearer <jwt>`` header on every HTTP request.
+
+        .. note::
+            A JWT credential typically has a relatively short validity period.  To avoid
+            authentication failures caused by stale credentials, periodically pass a
+            fresh credential via :meth:`~couchbase_analytics.cluster.Cluster.set_credential`.
+
+        Args:
+            token: The JSON Web Token.
+
+        Returns:
+            A Credential instance.
+        """
+        return Credential(jwt_token=token)
+
+    @classmethod
     def from_callable(cls, callback: Callable[[], Credential]) -> Credential:
         """Create a :class:`.Credential` from provided callback.
-
-        The callback is
 
         Args:
             callback: Callback that returns a :class:`.Credential`.
@@ -97,6 +139,8 @@ class Credential:
         return Credential(**callback().asdict())
 
     def __repr__(self) -> str:
+        if self._type is CredentialType.JWT:
+            return 'Credential(jwt_token=****)'
         return f'Credential(username={self._username}, password=****)'
 
     def __str__(self) -> str:
