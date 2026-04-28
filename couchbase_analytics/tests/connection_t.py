@@ -56,13 +56,13 @@ class ConnectionTestSuite:
         ],
     )
     def test_connstr_options_fail(self, connstr_opt: str) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         connstr = f'https://localhost?{connstr_opt}'
         with pytest.raises(ValueError):
             _ClientAdapter(connstr, cred)
 
     def test_connstr_options_max_retries(self) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         max_retries = 10
         connstr = f'https://localhost?max_retries={max_retries}'
         client = _ClientAdapter(connstr, cred)
@@ -95,7 +95,7 @@ class ConnectionTestSuite:
     def test_connstr_options_timeout(self, duration: str, expected_seconds: str) -> None:
         opt_keys = ['timeout.connect_timeout', 'timeout.query_timeout']
         opts = dict.fromkeys(opt_keys, duration)
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         connstr = f'https://localhost?{to_query_str(opts)}'
         client = _ClientAdapter(connstr, cred)
         req_builder = _RequestBuilder(client)
@@ -123,7 +123,7 @@ class ConnectionTestSuite:
     )
     def test_connstr_options_timeout_fail(self, invalid_opt_name: str) -> None:
         opts = {invalid_opt_name: '2500s'}
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         connstr = f'https://localhost?{to_query_str(opts)}'
         with pytest.raises(ValueError):
             _ClientAdapter(connstr, cred)
@@ -156,7 +156,7 @@ class ConnectionTestSuite:
         opt_keys = ['timeout.connect_timeout', 'timeout.query_timeout']
         for key in opt_keys:
             opts = {key: bad_duration}
-            cred = Credential.from_username_and_password('Administrator', 'password')
+            cred = Credential('Administrator', 'password')
             connstr = f'https://localhost?{to_query_str(opts)}'
             with pytest.raises(ValueError):
                 _ClientAdapter(connstr, cred)
@@ -175,7 +175,7 @@ class ConnectionTestSuite:
         ],
     )
     def test_connstr_options_security(self, connstr_opts: Dict[str, object], expected_opts: Dict[str, object]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         connstr = f'https://localhost?{to_query_str(connstr_opts)}'
         client = _ClientAdapter(connstr, cred)
         sec_opts = client.connection_details.cluster_options.get('security_options', {})
@@ -193,7 +193,7 @@ class ConnectionTestSuite:
     )
     def test_connstr_options_security_fail(self, invalid_opt_name: str) -> None:
         opts = {invalid_opt_name: 'True'}
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         connstr = f'https://localhost?{to_query_str(opts)}'
         with pytest.raises(ValueError):
             _ClientAdapter(connstr, cred)
@@ -213,7 +213,7 @@ class ConnectionTestSuite:
         ],
     )
     def test_invalid_connection_strings(self, connstr: str) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         with pytest.raises(ValueError):
             Cluster.create_instance(connstr, cred)
 
@@ -235,7 +235,7 @@ class ConnectionTestSuite:
         ],
     )
     def test_valid_connection_strings(self, connstr: str) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter(connstr, cred)
         # options should be empty
         assert {} == client.connection_details.cluster_options

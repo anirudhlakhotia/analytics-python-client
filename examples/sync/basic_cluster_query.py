@@ -28,7 +28,7 @@ def main() -> None:
     pw = 'Password!123'
     # User Input ends here.
 
-    cred = Credential.from_username_and_password(username, pw)
+    cred = Credential(username, pw)
     # NOTE:  Only an example on how to use options.  Not a recommendation.
     timeout_opts = TimeoutOptions(query_timeout=timedelta(seconds=30))
     cluster = Cluster.create_instance(endpoint, cred, ClusterOptions(timeout_options=timeout_opts))

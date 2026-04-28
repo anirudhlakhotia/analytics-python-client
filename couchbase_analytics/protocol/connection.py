@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, urlparse
 from couchbase_analytics.common._core.certificates import _Certificates
 from couchbase_analytics.common._core.duration_str_utils import parse_duration_str
 from couchbase_analytics.common._core.utils import is_null_or_empty
-from couchbase_analytics.common.credential import Credential, CredentialType
+from couchbase_analytics.common.credential import AnyCredential, _SupportsClientCertChain
 from couchbase_analytics.common.deserializer import DefaultJsonDeserializer, Deserializer
 from couchbase_analytics.common.options import ClusterOptions, SecurityOptions, TimeoutOptions
 from couchbase_analytics.common.request import RequestURL
@@ -159,7 +159,7 @@ class _ConnectionDetails:
 
     url: RequestURL
     cluster_options: ClusterOptionsTransformedKwargs
-    credential: Credential
+    credential: AnyCredential
     default_deserializer: Deserializer
     ssl_context: Optional[ssl.SSLContext] = None
     sni_hostname: Optional[str] = None
@@ -192,6 +192,12 @@ class _ConnectionDetails:
         return self.url.scheme == 'https'
 
     def validate_security_options(self) -> None:  # noqa: C901
+        # mTLS requires a TLS endpoint by definition; reject before any other validation
+        # so the error message points at the actual misconfiguration, not at a downstream
+        # `trust_only_*` arg conflict that doesn't apply to plaintext.
+        if not self.is_secure() and isinstance(self.credential, _SupportsClientCertChain):
+            raise ValueError('Client-certificate authentication requires a TLS (https://) endpoint.')
+
         security_opts: Optional[SecurityOptionsTransformedKwargs] = self.cluster_options.get('security_options')
         if security_opts is not None:
             # separate between value options and boolean option (trust_only_capella)
@@ -209,8 +215,6 @@ class _ConnectionDetails:
                 )
 
         if not self.is_secure():
-            if self.credential.credential_type is CredentialType.CERTIFICATE:
-                raise ValueError('Client-certificate authentication requires a TLS (https://) endpoint.')
             return
 
         self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -218,11 +222,11 @@ class _ConnectionDetails:
 
         if security_opts is None:
             self.ssl_context.set_default_verify_paths()
-            capalla_certs = _Certificates.get_capella_certificates()
-            self.ssl_context.load_verify_locations(cadata='\n'.join(capalla_certs))
+            capella_certs = _Certificates.get_capella_certificates()
+            self.ssl_context.load_verify_locations(cadata='\n'.join(capella_certs))
         elif security_opts.get('trust_only_capella', False):
-            capalla_certs = _Certificates.get_capella_certificates()
-            self.ssl_context.load_verify_locations(cadata='\n'.join(capalla_certs))
+            capella_certs = _Certificates.get_capella_certificates()
+            self.ssl_context.load_verify_locations(cadata='\n'.join(capella_certs))
         elif (certpath := security_opts.get('trust_only_pem_file', None)) is not None:
             self.ssl_context.load_verify_locations(cafile=certpath)
             security_opts['trust_only_capella'] = False
@@ -244,17 +248,15 @@ class _ConnectionDetails:
             self.ssl_context.check_hostname = True
             self.ssl_context.verify_mode = ssl.CERT_REQUIRED
 
-        if self.credential.credential_type is CredentialType.CERTIFICATE:
-            self.ssl_context.load_cert_chain(
-                certfile=self.credential._cert_path, keyfile=self.credential._key_path
-            )
+        if isinstance(self.credential, _SupportsClientCertChain):
+            self.credential.load_client_cert_chain(self.ssl_context)
 
     @classmethod
     def create(
         cls,
         opts_builder: OptionsBuilder,
         http_endpoint: str,
-        credential: Credential,
+        credential: AnyCredential,
         options: Optional[object] = None,
         **kwargs: object,
     ) -> _ConnectionDetails:

@@ -29,13 +29,13 @@ from couchbase_analytics.protocol._core.request_context import RequestContext
 from couchbase_analytics.protocol.streaming import HttpStreamingResponse
 
 if TYPE_CHECKING:
-    from couchbase_analytics.common.credential import Credential
+    from couchbase_analytics.common.credential import AnyCredential
     from couchbase_analytics.options import ClusterOptions
 
 
 class Cluster:
     def __init__(
-        self, http_endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        self, http_endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> None:
         self._cluster_id = str(uuid4())
         kwargs['cluster_id'] = self._cluster_id
@@ -117,7 +117,7 @@ class Cluster:
         else:
             self._client_adapter.log_message('Cluster does not have a connection, no need to shutdown.', LogLevel.INFO)
 
-    def set_credential(self, credential: Credential) -> None:
+    def set_credential(self, credential: AnyCredential) -> None:
         self._client_adapter.update_credential(credential)
 
     def execute_query(
@@ -152,6 +152,6 @@ class Cluster:
 
     @classmethod
     def create_instance(
-        cls, http_endpoint: str, credential: Credential, options: Optional[ClusterOptions], **kwargs: object
+        cls, http_endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions], **kwargs: object
     ) -> Cluster:
         return cls(http_endpoint, credential, options, **kwargs)

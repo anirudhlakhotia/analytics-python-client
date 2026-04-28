@@ -23,7 +23,7 @@ from couchbase_analytics.database import Database
 from couchbase_analytics.result import BlockingQueryResult
 
 if TYPE_CHECKING:
-    from couchbase_analytics.credential import Credential
+    from couchbase_analytics.credential import AnyCredential
     from couchbase_analytics.options import ClusterOptions
 
 
@@ -51,7 +51,7 @@ class Cluster:
     """  # noqa: E501
 
     def __init__(
-        self, endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        self, endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> None:
         from couchbase_analytics.protocol.cluster import Cluster as _Cluster
 
@@ -139,7 +139,7 @@ class Cluster:
         """  # noqa: E501
         return self._impl.execute_query(statement, *args, **kwargs)
 
-    def set_credential(self, credential: Credential) -> None:
+    def set_credential(self, credential: AnyCredential) -> None:
         """Replace the credential used for subsequent HTTP requests.
 
         Allows updating credentials (in particular, rotating a JWT or client certificate)
@@ -147,7 +147,7 @@ class Cluster:
         as the current credential.
 
         Args:
-            credential: The new :class:`.Credential` to use.
+            credential: The new credential to use.
 
         Raises:
             ValueError: If the new credential is a different type than the current
@@ -168,7 +168,7 @@ class Cluster:
 
     @classmethod
     def create_instance(
-        cls, endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        cls, endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> Cluster:
         """Create a Cluster instance
 
@@ -202,7 +202,7 @@ class Cluster:
                 from couchbase_analytics.cluster import Cluster
                 from couchbase_analytics.credential import Credential
 
-                cred = Credential.from_username_and_password('username', 'password')
+                cred = Credential('username', 'password')
                 cluster = Cluster.create_instance('https://hostname', cred)
 
 
@@ -214,7 +214,7 @@ class Cluster:
                 from couchbase_analytics.credential import Credential
                 from couchbase_analytics.options import ClusterOptions, ClusterTimeoutOptions
 
-                cred = Credential.from_username_and_password('username', 'password')
+                cred = Credential('username', 'password')
                 opts = ClusterOptions(timeout_options=ClusterTimeoutOptions(query_timeout=timedelta(seconds=120)))
                 cluster = Cluster.create_instance('https://hostname', cred, opts)
 

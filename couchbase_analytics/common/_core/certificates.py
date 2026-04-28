@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import functools
 import os
 from pathlib import Path
 from typing import List
@@ -38,9 +39,14 @@ class _Certificates:
         return cert_file.read_text()
 
     @staticmethod
+    @functools.lru_cache(maxsize=1)
     def get_capella_certificates() -> List[str]:
         """
         **INTERNAL** Convenience method for access to Capella certificates.  NOT part of the public API.
+
+        The returned list is cached because the certificates are bundled static assets;
+        callers must not mutate it.
+
         Returns:
             List[str]: List of Capella certificates.
         """

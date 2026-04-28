@@ -57,21 +57,21 @@ class ClusterOptionsTestSuite:
 
     @pytest.mark.parametrize('deserializer_cls', [DefaultJsonDeserializer, PassthroughDeserializer])
     def test_options_deserializer(self, deserializer_cls: Type[Deserializer]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         deserializer_instance = deserializer_cls()
         client = _ClientAdapter('https://localhost', cred, ClusterOptions(deserializer=deserializer_instance))
         assert isinstance(client.connection_details.default_deserializer, deserializer_cls)
 
     @pytest.mark.parametrize('deserializer_cls', [DefaultJsonDeserializer, PassthroughDeserializer])
     def test_options_deserializer_kwargs(self, deserializer_cls: Type[Deserializer]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         deserializer_instance = deserializer_cls()
         client = _ClientAdapter('https://localhost', cred, **{'deserializer': deserializer_instance})
         assert isinstance(client.connection_details.default_deserializer, deserializer_cls)
 
     @pytest.mark.parametrize('max_retries', [5, 10, None])
     def test_options_max_retries(self, max_retries: Optional[int]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter('https://localhost', cred, ClusterOptions(max_retries=max_retries))
         if max_retries is None:
             assert client.connection_details.get_max_retries() == 7
@@ -80,7 +80,7 @@ class ClusterOptionsTestSuite:
 
     @pytest.mark.parametrize('max_retries', [5, 10, None])
     def test_options_max_retries_kwargs(self, max_retries: Optional[int]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         if max_retries is None:
             client = _ClientAdapter('https://localhost', cred)
             assert client.connection_details.get_max_retries() == 7
@@ -106,7 +106,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_security_options(self, opts: SecurityOptionsKwargs, expected_opts: SecurityOptionsKwargs) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter('https://localhost', cred, ClusterOptions(security_options=SecurityOptions(**opts)))
         assert expected_opts == client.connection_details.cluster_options.get('security_options')
 
@@ -129,7 +129,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_security_options_classmethods(self, opts: SecurityOptions, expected_opts: Dict[str, object]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter('https://localhost', cred, ClusterOptions(security_options=opts))
         assert expected_opts == client.connection_details.cluster_options.get('security_options')
 
@@ -151,7 +151,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_security_options_kwargs(self, opts: Dict[str, object], expected_opts: Dict[str, object]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter('https://localhost', cred, **opts)
         assert expected_opts == client.connection_details.cluster_options.get('security_options')
 
@@ -164,7 +164,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_security_options_invalid(self, opts: SecurityOptionsKwargs) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         with pytest.raises(ValueError):
             _ClientAdapter('https://localhost', cred, ClusterOptions(security_options=SecurityOptions(**opts)))
 
@@ -177,7 +177,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_security_options_invalid_kwargs(self, opts: Dict[str, object]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         with pytest.raises(ValueError):
             _ClientAdapter('https://localhost', cred, **opts)
 
@@ -194,7 +194,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_timeout_options(self, opts: TimeoutOptionsKwargs, expected_opts: TimeoutOptionsKwargs) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter('https://localhost', cred, ClusterOptions(timeout_options=TimeoutOptions(**opts)))
         assert expected_opts == client.connection_details.cluster_options.get('timeout_options')
 
@@ -210,7 +210,7 @@ class ClusterOptionsTestSuite:
         ],
     )
     def test_timeout_options_kwargs(self, opts: Dict[str, object], expected_opts: Dict[str, object]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         client = _ClientAdapter('https://localhost', cred, **opts)
         assert expected_opts == client.connection_details.cluster_options.get('timeout_options')
 
@@ -218,7 +218,7 @@ class ClusterOptionsTestSuite:
         'opts', [{'connect_timeout': timedelta(seconds=-1)}, {'query_timeout': timedelta(seconds=-1)}]
     )
     def test_timeout_options_must_be_positive(self, opts: TimeoutOptionsKwargs) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         with pytest.raises(ValueError):
             _ClientAdapter('https://localhost', cred, ClusterOptions(timeout_options=TimeoutOptions(**opts)))
 
@@ -226,7 +226,7 @@ class ClusterOptionsTestSuite:
         'opts', [{'connect_timeout': timedelta(seconds=-1)}, {'query_timeout': timedelta(seconds=-1)}]
     )
     def test_timeout_options_must_be_positive_kwargs(self, opts: Dict[str, object]) -> None:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         with pytest.raises(ValueError):
             _ClientAdapter('https://localhost', cred, **opts)
 

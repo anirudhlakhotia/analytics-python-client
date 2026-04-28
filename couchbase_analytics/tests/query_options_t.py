@@ -276,7 +276,7 @@ class ClusterQueryOptionsTests(QueryOptionsTestSuite):
 
     @pytest.fixture(scope='class')
     def request_builder(self) -> _RequestBuilder:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         return _RequestBuilder(_ClientAdapter('https://localhost', cred))
 
 
@@ -298,5 +298,5 @@ class ScopeQueryOptionsTests(QueryOptionsTestSuite):
 
     @pytest.fixture(scope='class')
     def request_builder(self) -> _RequestBuilder:
-        cred = Credential.from_username_and_password('Administrator', 'password')
+        cred = Credential('Administrator', 'password')
         return _RequestBuilder(_ClientAdapter('https://localhost', cred), 'test-database', 'test-scope')

@@ -326,7 +326,7 @@ class BlockingTestEnvironment(TestEnvironment):
         else:
             connstr = config.get_connection_string()
         username, pw = config.get_username_and_pw()
-        cred = Credential.from_username_and_password(username, pw)
+        cred = Credential(username, pw)
         sec_opts: Optional[SecurityOptions] = None
         if config.nonprod is True:
             from couchbase_analytics.common._core.certificates import _Certificates
@@ -550,7 +550,7 @@ class AsyncTestEnvironment(TestEnvironment):
         if backend is not None:
             env_opts['backend'] = backend
         username, pw = config.get_username_and_pw()
-        cred = Credential.from_username_and_password(username, pw)
+        cred = Credential(username, pw)
         sec_opts: Optional[SecurityOptions] = None
         if config.nonprod is True:
             from couchbase_analytics.common._core.certificates import _Certificates

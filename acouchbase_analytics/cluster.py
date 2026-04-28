@@ -28,7 +28,7 @@ from acouchbase_analytics.database import AsyncDatabase
 from couchbase_analytics.result import AsyncQueryResult
 
 if TYPE_CHECKING:
-    from couchbase_analytics.credential import Credential
+    from couchbase_analytics.credential import AnyCredential
     from couchbase_analytics.options import ClusterOptions
 
 
@@ -56,7 +56,7 @@ class AsyncCluster:
     """  # noqa: E501
 
     def __init__(
-        self, endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        self, endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> None:
         from acouchbase_analytics.protocol.cluster import AsyncCluster as _AsyncCluster
 
@@ -143,7 +143,7 @@ class AsyncCluster:
         """  # noqa: E501
         return self._impl.execute_query(statement, *args, **kwargs)
 
-    async def set_credential(self, credential: Credential) -> None:
+    async def set_credential(self, credential: AnyCredential) -> None:
         """Replace the credential used for subsequent HTTP requests.
 
         Allows updating credentials (in particular, rotating a JWT or client certificate)
@@ -151,7 +151,7 @@ class AsyncCluster:
         as the current credential.
 
         Args:
-            credential: The new :class:`.Credential` to use.
+            credential: The new credential to use.
 
         Raises:
             ValueError: If the new credential is a different type than the current
@@ -172,7 +172,7 @@ class AsyncCluster:
 
     @classmethod
     def create_instance(
-        cls, endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        cls, endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> AsyncCluster:
         """Create an AsyncCluster instance
 
@@ -209,7 +209,7 @@ class AsyncCluster:
                 from acouchbase_analytics.credential import Credential
 
                 async def main() -> None:
-                    cred = Credential.from_username_and_password('username', 'password')
+                    cred = Credential('username', 'password')
                     cluster = AsyncCluster.create_instance('https://hostname', cred)
                     # ... other async code ...
 
@@ -228,7 +228,7 @@ class AsyncCluster:
                 from acouchbase_analytics.options import ClusterOptions, ClusterTimeoutOptions
 
                 async def main() -> None:
-                    cred = Credential.from_username_and_password('username', 'password')
+                    cred = Credential('username', 'password')
                     opts = ClusterOptions(timeout_options=ClusterTimeoutOptions(query_timeout=timedelta(seconds=120)))
                     cluster = AsyncCluster.create_instance('https://hostname', cred, opts)
                     # ... other async code ...

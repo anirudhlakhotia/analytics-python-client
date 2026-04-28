@@ -34,13 +34,13 @@ from couchbase_analytics.common.result import AsyncQueryResult
 from couchbase_analytics.protocol._core.request import _RequestBuilder
 
 if TYPE_CHECKING:
-    from couchbase_analytics.common.credential import Credential
+    from couchbase_analytics.common.credential import AnyCredential
     from couchbase_analytics.options import ClusterOptions
 
 
 class AsyncCluster:
     def __init__(
-        self, endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        self, endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> None:
         self._cluster_id = str(uuid4())
         kwargs['cluster_id'] = self._cluster_id
@@ -96,7 +96,7 @@ class AsyncCluster:
         else:
             self.client_adapter.log_message('Cluster does not have a connection.  Ignoring shutdown.', LogLevel.WARNING)
 
-    async def set_credential(self, credential: Credential) -> None:
+    async def set_credential(self, credential: AnyCredential) -> None:
         await self._client_adapter.update_credential(credential)
 
     async def _execute_query(self, http_resp: AsyncHttpStreamingResponse) -> AsyncQueryResult:
@@ -121,7 +121,7 @@ class AsyncCluster:
 
     @classmethod
     def create_instance(
-        cls, endpoint: str, credential: Credential, options: Optional[ClusterOptions] = None, **kwargs: object
+        cls, endpoint: str, credential: AnyCredential, options: Optional[ClusterOptions] = None, **kwargs: object
     ) -> AsyncCluster:
         return cls(endpoint, credential, options, **kwargs)
 

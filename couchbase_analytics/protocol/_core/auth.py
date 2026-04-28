@@ -16,9 +16,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
-from httpx import Auth, Request
+from httpx import Auth, Request, Response
+
+from couchbase_analytics.common.credential import _SupportsAuthHeader
 
 if TYPE_CHECKING:
     from couchbase_analytics.protocol.connection import _ConnectionDetails
@@ -28,15 +30,16 @@ class DynamicCredentialAuth(Auth):
     """httpx ``Auth`` that reads the current credential from ``_ConnectionDetails`` at
     request time, so rotating a credential via ``Cluster.set_credential`` takes effect
     immediately without rebuilding the HTTP client.
+
+    Cert credentials authenticate during the TLS handshake, so the auth_flow no-ops
+    for them — the runtime ``_SupportsAuthHeader`` check picks out password/JWT.
     """
 
     def __init__(self, conn_details: _ConnectionDetails) -> None:
         self._conn_details = conn_details
 
-    def auth_flow(self, request: Request):  # type: ignore[no-untyped-def]
-        header = self._conn_details.credential.http_authorization_header()
-        if header is not None:
-            request.headers['Authorization'] = header
-        # Client-certificate credentials authenticate during the TLS handshake, so no
-        # Authorization header is set.
+    def auth_flow(self, request: Request) -> Generator[Request, Response, None]:
+        cred = self._conn_details.credential
+        if isinstance(cred, _SupportsAuthHeader):
+            request.headers['Authorization'] = cred.http_authorization_header()
         yield request

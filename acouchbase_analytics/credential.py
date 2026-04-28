@@ -14,4 +14,9 @@
 #  limitations under the License.
 
 
-from couchbase_analytics.common.credential import Credential as Credential  # noqa: F401
+from couchbase_analytics.common.credential import (  # noqa: F401
+    AnyCredential as AnyCredential,
+    CertificateCredential as CertificateCredential,
+    Credential as Credential,
+    JwtCredential as JwtCredential,
+)

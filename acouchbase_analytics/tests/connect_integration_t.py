@@ -41,7 +41,7 @@ class ConnectTestSuite:
         statement = 'SELECT sleep("some value", 10000) AS some_field;'
 
         username, pw = test_env.config.get_username_and_pw()
-        cred = Credential.from_username_and_password(username, pw)
+        cred = Credential(username, pw)
         # ignoring the port enables the failure
         connstr = test_env.config.get_connection_string(ignore_port=True)
         cluster = AsyncCluster.create_instance(connstr, cred)
@@ -59,7 +59,7 @@ class ConnectTestSuite:
         statement = 'SELECT sleep("some value", 10000) AS some_field;'
 
         username, pw = test_env.config.get_username_and_pw()
-        cred = Credential.from_username_and_password(username, pw)
+        cred = Credential(username, pw)
         # ignoring the port enables the failure
         connstr = test_env.config.get_connection_string(ignore_port=True)
         cluster = AsyncCluster.create_instance(connstr, cred)
